@@ -5,7 +5,9 @@ const db = require('../../src/db');
 
 beforeEach(async () => {
   await db.query('DROP TABLE IF EXISTS users');
-  await db.query('CREATE TABLE users (id SERIAL PRIMARY KEY, nom TEXT NOT NULL)');
+  await db.query(
+    'CREATE TABLE users (id SERIAL PRIMARY KEY, nom TEXT NOT NULL)'
+  );
   await db.query("INSERT INTO users (nom) VALUES ('Alice')");
 });
 
@@ -16,9 +18,8 @@ afterAll(async () => {
 describe('GET /users/:id', () => {
   test("retourne 200 et l'utilisateur existant", async () => {
     const res = await request(app).get('/users/1');
-
     expect(res.status).toBe(200);
-    expect(res.body.nom).toBe('Alice');
+    expect(res.body).toEqual({ id: 1, nom: 'Alice' });
   });
 
   test('retourne 404 pour un utilisateur inconnu', async () => {
@@ -32,13 +33,16 @@ describe('GET /users/:id', () => {
   });
 
   test("résiste à une tentative d'injection SQL", async () => {
-    const attaque = encodeURIComponent('1; DROP TABLE users;--');
-    const res = await request(app).get('/users/' + attaque);
-
+    const injection = encodeURIComponent('1; DROP TABLE users;--');
+    const res = await request(app).get(`/users/${injection}`);
     expect(res.status).toBe(400);
 
-    // La table doit toujours exister et contenir sa ligne
-    const { rows } = await db.query('SELECT count(*) FROM users');
-    expect(Number(rows[0].count)).toBe(1);
+    const result = await db.query('SELECT COUNT(*) FROM users');
+    expect(Number(result.rows[0].count)).toBe(1);
+  });
+
+  test('ne divulgue pas la technologie du serveur', async () => {
+    const res = await request(app).get('/users/1');
+    expect(res.headers['x-powered-by']).toBeUndefined();
   });
 });
