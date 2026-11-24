@@ -1,0 +1,29 @@
+
+# Étape 1 : dépendances de production uniquement
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Étape 2 : image finale minimale
+FROM node:22-alpine
+ENV NODE_ENV=production
+WORKDIR /app
+
+RUN rm -rf /usr/local/lib/node_modules \
+    /opt/yarn* \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/bin/yarn \
+    /usr/local/bin/yarnpkg \
+    /usr/local/bin/corepack
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY src ./src
+COPY public ./public
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget -qO- http://localhost:3000/login.html || exit 1
+CMD ["node", "src/server.js"]
