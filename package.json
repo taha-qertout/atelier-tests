@@ -4,14 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "node src/server.js",
-  "test": "jest",
-  "test:unit": "jest tests/unit --coverage",
-  "test:int": "jest tests/integration --runInBand",
-  "test:e2e": "playwright test"
+    "start": "node src/server.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit --coverage",
+    "test:int": "jest tests/integration --runInBand",
+    "test:e2e": "playwright test",
+    "test:cov": "jest --runInBand --coverage"
   },
   "jest": {
-    "testPathIgnorePatterns": ["/node_modules/", "/e2e/"]
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/e2e/"
+    ]
   },
   "keywords": [],
   "author": "",
